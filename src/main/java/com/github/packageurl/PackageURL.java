@@ -430,14 +430,7 @@ public final class PackageURL implements Serializable {
             return null;
         }
 
-        switch (type) {
-            case StandardTypes.HUGGINGFACE:
-            case StandardTypes.LUAROCKS:
-            case StandardTypes.OCI:
-                return StringUtil.toLowerCase(value);
-            default:
-                return value;
-        }
+        return PackageNamePolicies.forType(type).normalize(value);
     }
 
     private static @Nullable Map<String, String> validateQualifiers(final @Nullable Map<String, String> values)
@@ -577,6 +570,10 @@ public final class PackageURL implements Serializable {
         }
     }
 
+    private static String canonicalizeQualifierKey(String key) {
+    return StringUtil.toLowerCase(key);
+}
+
     private static @Nullable Map<String, String> parseQualifiers(final @Nullable Map<String, String> qualifiers)
             throws MalformedPackageURLException {
         if (qualifiers == null || qualifiers.isEmpty()) {
@@ -588,7 +585,7 @@ public final class PackageURL implements Serializable {
                     .filter(entry -> !isEmpty(entry.getValue()))
                     .collect(
                             TreeMap::new,
-                            (map, value) -> map.put(StringUtil.toLowerCase(value.getKey()), value.getValue()),
+                            (map, entry) -> map.put(canonicalizeQualifierKey(entry.getKey()),entry.getValue()),
                             TreeMap::putAll);
             return validateQualifiers(results);
         } catch (ValidationException ex) {
@@ -606,7 +603,7 @@ public final class PackageURL implements Serializable {
                             (map, value) -> {
                                 final String[] entry = value.split("=", 2);
                                 if (entry.length == 2 && !entry[1].isEmpty()) {
-                                    String key = StringUtil.toLowerCase(entry[0]);
+                                    String key = canonicalizeQualifierKey(entry[0]);
                                     if (map.put(key, StringUtil.percentDecode(entry[1])) != null) {
                                         throw new ValidationException(
                                                 "Duplicate package qualifier encountered. More then one value was specified for "

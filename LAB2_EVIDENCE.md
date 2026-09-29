@@ -11,3 +11,5 @@
 # Problem A: validateName mixes general validation with package-type-specific normalisation. 
 
 - Goal: move the varying name-normalisation algorithm behind a stable policy while preserving every existing result
+
+- The normalization logic was moved from validateName into reusable policies, while keeping validation behaviour the same
